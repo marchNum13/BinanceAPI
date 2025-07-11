@@ -10,6 +10,7 @@
  * 4. Mengambil daftar open order yang aktif.
  * 5. Mengambil informasi akun dan saldo spot.
  * 6. Mendapatkan waktu server Binance.
+ * 7. Mendapatkan informasi exchange (aturan trading, presisi).
  */
 
 class BinanceSpotAPI {
@@ -50,7 +51,8 @@ class BinanceSpotAPI {
         // Tambahkan timestamp dan tanda tangan jika diperlukan
         if ($signed) {
             // Timestamp harus dalam milidetik
-            $params['timestamp'] = round(microtime(true) * 1000);
+            // Menggunakan waktu server yang diambil dari getServerTime()
+            $params['timestamp'] = $this->getServerTime(); //
             $query_string = http_build_query($params);
             $signature = hash_hmac('sha256', $query_string, $this->secret_key);
             $url .= '?' . $query_string . '&signature=' . $signature;
@@ -293,8 +295,8 @@ class BinanceSpotAPI {
      * "balances" => [ // Array dari saldo masing-masing aset
      * [
      * "asset" => "BTC",
-                                      "free" => "4723846.89200000", // Saldo yang tersedia untuk digunakan
-                                      "locked" => "0.00000000" // Saldo yang sedang terikat di order
+     * "free" => "4723846.89200000", // Saldo yang tersedia untuk digunakan
+     * "locked" => "0.00000000" // Saldo yang sedang terikat di order
      * ],
      * // ... aset lainnya
      * ],
@@ -329,6 +331,49 @@ class BinanceSpotAPI {
     public function getServerTime() {
         $response = $this->callApi('GET', '/api/v3/time', [], false);
         return $response['serverTime'] ?? false;
+    }
+
+    /**
+     * Mengambil informasi dan aturan exchange, termasuk detail setiap simbol perdagangan (misalnya, presisi harga dan kuantitas, batasan order).
+     * Endpoint: GET /api/v3/exchangeInfo
+     * Tipe: Public (Tidak memerlukan API Key atau Secret Key).
+     * Sangat penting untuk validasi order sebelum diajukan ke Binance.
+     *
+     * @return array|false Array asosiatif yang berisi informasi exchange jika sukses, atau false jika gagal.
+     * Contoh return (struktur disederhanakan):
+     * [
+     * "timezone" => "UTC",
+     * "serverTime" => 1678886400000,
+     * "rateLimits" => [ // Batasan rate limit untuk berbagai endpoint
+     * ["rateLimitType" => "REQUEST_WEIGHT", "interval" => "MINUTE", "intervalNum" => 1, "limit" => 1200],
+     * // ...
+     * ],
+     * "exchangeFilters" => [],
+     * "symbols" => [ // Daftar semua simbol perdagangan
+     * [
+     * "symbol" => "ETHBTC",
+     * "status" => "TRADING", // TRADING, BREAK, HALT
+     * "baseAsset" => "ETH",
+     * "baseAssetPrecision" => 8, // Jumlah desimal untuk aset dasar
+     * "quoteAsset" => "BTC",
+     * "quoteAssetPrecision" => 8, // Jumlah desimal untuk aset kuotasi
+     * "quoteOrderQtyMarketAllowed" => true,
+     * "isSpotTradingAllowed" => true,
+     * "isMarginTradingAllowed" => true,
+     * "filters" => [ // Aturan trading spesifik untuk symbol ini
+     * ["filterType" => "PRICE_FILTER", "minPrice" => "0.00000100", "maxPrice" => "100000.00000000", "tickSize" => "0.00000100"], // Presisi harga
+     * ["filterType" => "LOT_SIZE", "minQty" => "0.00001000", "maxQty" => "9000.00000000", "stepSize" => "0.00001000"], // Presisi kuantitas
+     * ["filterType" => "MIN_NOTIONAL", "minNotional" => "0.00010000", "applyToMarket" => true, "avgPriceMins" => 5], // Minimum nilai order
+     * // ...
+     * ],
+     * "permissions" => ["SPOT", "MARGIN"]
+     * ],
+     * // ... simbol lainnya
+     * ]
+     * ]
+     */
+    public function getExchangeInfo() {
+        return $this->callApi('GET', '/api/v3/exchangeInfo', [], false);
     }
 }
 
