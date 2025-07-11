@@ -25,6 +25,7 @@ Class `BinanceSpotAPI` ini mencakup fungsionalitas untuk endpoint Binance Spot R
 4.  `GET /api/v3/openOrders` - Mengambil daftar open order yang aktif.
 5.  `GET /api/v3/account` - Mengambil informasi akun dan saldo spot.
 6.  `GET /api/v3/time` - Mendapatkan waktu server Binance (UTC milidetik).
+7.  `GET /api/v3/exchangeInfo` - Mendapatkan informasi dan aturan exchange.
 
 ## Instalasi
 1.  Pastikan Anda memiliki PHP (versi 7.0 atau lebih tinggi direkomendasikan) dengan ekstensi `cURL` diaktifkan.
