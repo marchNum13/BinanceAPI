@@ -473,7 +473,7 @@ Ini adalah endpoint REST untuk mengelola `listenKey` yang diperlukan untuk terhu
 ```
 
 ## Catatan Penting
-- *Keamanan API Key*: Selalu jaga kerahasiaan Secret Key Anda. Pertimbangkan untuk menggunakan IP Whitelisting di pengaturan API key Binance Anda untuk keamanan tambahan.
+- _Keamanan API Key_: Selalu jaga kerahasiaan Secret Key Anda. Pertimbangkan untuk menggunakan IP Whitelisting di pengaturan API key Binance Anda untuk keamanan tambahan.
 - *Time Synchronization*: API Binance sangat sensitif terhadap perbedaan waktu. Pastikan waktu server Anda disinkronkan dengan waktu server Binance. Fungsi getServerTime() dapat membantu Anda dalam hal ini. Perbedaan waktu yang terlalu besar (biasanya lebih dari 1000-2000 ms) akan menyebabkan signed requests ditolak.
 - Presisi (Precision) & Aturan Trading: Sangat penting untuk selalu merujuk pada data dari getExchangeInfo() sebelum mengajukan order. Setiap pasangan trading memiliki aturan presisi yang berbeda untuk harga (price) dan kuantitas (quantity), serta batasan minimum/maksimum (minQty, maxQty, minNotional). Kegagalan untuk mematuhi aturan ini akan menyebabkan order Anda ditolak. Gunakan tickSize untuk harga dan stepSize untuk kuantitas dari LOT_SIZE dan PRICE_FILTER untuk memastikan Anda menggunakan kelipatan yang benar.
 - Error Handling: Klien ini memiliki error handling dasar. Untuk aplikasi produksi, implementasikan try-catch blocks dan penanganan kode error Binance secara spesifik.
