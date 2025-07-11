@@ -66,11 +66,245 @@ Sertakan file `BinanceSpotAPI.php` dan buat instance class dengan API Key dan Se
 
 ```php
 <?php
-require_once 'BinanceSpotAPI.php';
+  require_once 'BinanceSpotAPI.php';
 
-// GANTI DENGAN API KEY DAN SECRET KEY ASLI ANDA
-$api_key = 'YOUR_BINANCE_API_KEY';
-$secret_key = 'YOUR_BINANCE_SECRET_KEY';
+  // GANTI DENGAN API KEY DAN SECRET KEY ASLI ANDA
+  $api_key = 'YOUR_BINANCE_API_KEY';
+  $secret_key = 'YOUR_BINANCE_SECRET_KEY';
 
-$binanceApi = new BinanceSpotAPI($api_key, $secret_key);
+  $binanceApi = new BinanceSpotAPI($api_key, $secret_key);
 ?>
+```
+
+### Menguji Konektivitas Ping
+`ping()` - Menguji konektivitas ke REST API Binance.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Menguji konektivitas
+  $ping = $binanceApi->ping();
+  if ($ping !== false) { // Ping akan mengembalikan array kosong [] jika sukses
+      echo "Koneksi ke Binance API berhasil!\n";
+  } else {
+      echo "Gagal koneksi ke Binance API.\n";
+  }
+?>
+```
+
+### Mendapatkan Waktu Server
+`getServerTime()` - Mengambil waktu server Binance dalam format Unix timestamp milidetik (UTC).
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil waktu server Binance
+  $serverTime = $binanceApi->getServerTime();
+  if ($serverTime) {
+      echo "Waktu Server Binance (milidetik): " . $serverTime . "\n";
+      // Konversi ke format tanggal yang lebih mudah dibaca (ingat ini UTC)
+      echo "Waktu Server Binance (UTC): " . date('Y-m-d H:i:s', $serverTime / 1000) . " UTC\n";
+      
+      // Contoh konversi ke zona waktu lokal (WITA) menggunakan DateTime
+      $witaDateTime = new DateTime("@" . ($serverTime / 1000), new DateTimeZone('UTC'));
+      $witaDateTime->setTimezone(new DateTimeZone('Asia/Makassar')); // Sesuaikan dengan zona waktu lokal Anda
+      echo "Waktu Server Binance (Lokal WITA): " . $witaDateTime->format('Y-m-d H:i:s') . " WITA\n";
+  } else {
+      echo "Gagal mengambil waktu server Binance.\n";
+  }
+?>
+```
+
+### Mengambil Informasi Exchange (Aturan Trading)
+`getExchangeInfo()` - Mengambil informasi dan aturan exchange, termasuk detail setiap simbol perdagangan (presisi harga/kuantitas, batasan order). Sangat direkomendasikan untuk digunakan sebelum mengajukan order!
+
+```php
+<?php
+// ... inisialisasi class ...
+
+// Mengambil informasi exchange
+$exchangeInfo = $binanceApi->getExchangeInfo();
+if ($exchangeInfo) {
+    echo "Informasi Exchange:\n";
+    echo "  Timezone: " . $exchangeInfo['timezone'] . "\n";
+    echo "  Server Time: " . date('Y-m-d H:i:s', $exchangeInfo['serverTime'] / 1000) . " UTC\n";
+
+    echo "  Contoh Info Symbol BTCUSDT:\n";
+    $btcUsdtInfo = null;
+    foreach ($exchangeInfo['symbols'] as $symbolInfo) {
+        if ($symbolInfo['symbol'] === 'BTCUSDT') {
+            $btcUsdtInfo = $symbolInfo;
+            break;
+        }
+    }
+
+    if ($btcUsdtInfo) {
+        echo "    Symbol: " . $btcUsdtInfo['symbol'] . "\n";
+        echo "    Status: " . $btcUsdtInfo['status'] . "\n";
+        echo "    Base Asset: " . $btcUsdtInfo['baseAsset'] . ", Precision: " . $btcUsdtInfo['baseAssetPrecision'] . "\n";
+        echo "    Quote Asset: " . $btcUsdtInfo['quoteAsset'] . ", Precision: " . $btcUsdtInfo['quoteAssetPrecision'] . "\n";
+        echo "    Filters:\n";
+        foreach ($btcUsdtInfo['filters'] as $filter) {
+            echo "      - Type: " . $filter['filterType'];
+            if ($filter['filterType'] === 'PRICE_FILTER') {
+                echo ", minPrice: " . $filter['minPrice'] . ", maxPrice: " . $filter['maxPrice'] . ", tickSize: " . $filter['tickSize'];
+            } elseif ($filter['filterType'] === 'LOT_SIZE') {
+                echo ", minQty: " . $filter['minQty'] . ", maxQty: " . $filter['maxQty'] . ", stepSize: " . $filter['stepSize'];
+            } elseif ($filter['filterType'] === 'MIN_NOTIONAL') {
+                echo ", minNotional: " . $filter['minNotional'];
+            }
+            echo "\n";
+        }
+    } else {
+        echo "    Info BTCUSDT tidak ditemukan.\n";
+    }
+} else {
+    echo "Gagal mengambil informasi exchange.\n";
+}
+?>
+```
+
+### Mengambil Harga Terkini (Ticker Price)
+`getSymbolPrice(string $symbol = null)` - Mengambil harga terkini untuk satu atau semua pasangan perdagangan.
+- `$symbol` (opsional): Filter berdasarkan pasangan trading (misal: `'BTCUSDT'`). Jika `null`, akan mengembalikan harga semua symbol.
+
+``` php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil harga BTCUSDT
+  $btcPrice = $binanceApi->getSymbolPrice('BTCUSDT');
+  if ($btcPrice) {
+      echo "Harga BTCUSDT saat ini: " . $btcPrice['price'] . "\n";
+  } else {
+      echo "Gagal mengambil harga BTCUSDT.\n";
+  }
+
+  // Mengambil harga semua symbol (bisa sangat banyak!)
+  /*
+  $allPrices = $binanceApi->getSymbolPrice();
+  if ($allPrices) {
+      echo "Beberapa Harga:\n";
+      foreach (array_slice($allPrices, 0, 5) as $ticker) { // Hanya menampilkan 5 contoh
+          echo "  Symbol: " . $ticker['symbol'] . ", Price: " . $ticker['price'] . "\n";
+      }
+  }
+  */
+?>
+```
+
+### Mengambil Data Klines/Candlestick
+`getKlines(string $symbol, string $interval, int $limit = 500, int $startTime = null, int $endTime = null)` - Mengambil data candlestick.
+- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
+- `$interval`: Interval candlestick (misal: '1m', '1h', '1d').
+- `$limit`: Jumlah candlestick yang diinginkan (default 500, max 1000).
+- `$startTime`, `$endTime`: Filter berdasarkan rentang waktu (Unix timestamp milidetik).
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil 10 candlestick BTCUSDT dengan interval 1 jam
+  $klines = $binanceApi->getKlines('BTCUSDT', '1h', 10);
+  if ($klines) {
+      echo "Data Klines BTCUSDT (1h):\n";
+      foreach ($klines as $kline) {
+          echo "  Time: " . date('Y-m-d H:i:s', $kline[0] / 1000) . " | Open: " . $kline[1] . " | Close: " . $kline[4] . " | Volume: " . $kline[5] . "\n";
+      }
+  } else {
+      echo "Gagal mengambil data klines.\n";
+  }
+?>
+```
+
+### Mengambil Kedalaman Pasar (Order Book)
+`getDepth(string $symbol, int $limit = 100)` - Mengambil order book (buku pesanan) untuk pasangan trading tertentu.
+- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
+- `$limit`: Jumlah entri kedalaman yang ingin diambil (misal: 5, 10, 20, 50, 100, 500, 1000, 5000). Default 100.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil kedalaman pasar (order book) untuk BTCUSDT dengan limit 10
+  $depth = $binanceApi->getDepth('BTCUSDT', 10);
+  if ($depth) {
+      echo "Order Book BTCUSDT (Top 10):\n";
+      echo "  Bids (Buy Orders):\n";
+      foreach ($depth['bids'] as $bid) {
+          echo "    Price: " . $bid[0] . ", Quantity: " . $bid[1] . "\n";
+      }
+      echo "  Asks (Sell Orders):\n";
+      foreach ($depth['asks'] as $ask) {
+          echo "    Price: " . $ask[0] . ", Quantity: " . $ask[1] . "\n";
+      }
+  } else {
+      echo "Gagal mengambil kedalaman pasar.\n";
+  }
+?>
+```
+
+### Mengajukan Order Baru (Limit, Market, Stop Loss, Take Profit)
+`placeOrder(string $symbol, string $side, string $type, float $quantity, float $price = null, float $stopPrice = null, string $timeInForce = null, string $newClientOrderId = null)` - Mengajukan order baru.
+- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
+- `$side`: Arah order ('BUY' atau 'SELL').
+- `$type`: Tipe order ('LIMIT', 'MARKET', 'STOP_LOSS', 'TAKE_PROFIT').
+- `$quantity`: Jumlah aset dasar.
+- `$price` (opsional): Harga untuk order LIMIT, atau harga limit untuk order STOP_LOSS/TAKE_PROFIT.
+- `$stopPrice` (opsional): Harga pemicu untuk order STOP_LOSS/TAKE_PROFIT.
+- `$timeInForce` (opsional): Untuk order LIMIT ('GTC', 'IOC', 'FOK').
+- `$newClientOrderId` (opsional): ID order kustom Anda.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // CONTOH ORDER DAN PEMBATALAN (KOMENTARI ATAU GUNAKAN DENGAN SANGAT HATI-HATI PADA AKUN NYATA)
+  // Pastikan Anda memahami presisi dan aturan trading dari getExchangeInfo() sebelum mencoba ini.
+  // Order di bawah ini akan gagal jika kondisi tidak terpenuhi atau saldo tidak cukup.
+
+
+  echo "--- Mengajukan Order Limit (Contoh: Beli BNBUSDT 0.01 di harga 250) ---\n";
+  $symbol_limit = 'BNBUSDT';
+  $side_limit = 'BUY';
+  $quantity_limit = 0.01; // Pastikan sesuai stepSize BNBUSDT
+  $price_limit = 250.00;   // Pastikan sesuai tickSize BNBUSDT
+
+  $newOrder = $binanceApi->placeOrder($symbol_limit, $side_limit, 'LIMIT', $quantity_limit, $price_limit, null, 'GTC');
+  if ($newOrder) {
+      echo "Order Limit Berhasil Dibuat: Order ID " . $newOrder['orderId'] . ", Status: " . $newOrder['status'] . "\n";
+      $placed_order_id = $newOrder['orderId'];
+      $placed_client_order_id = $newOrder['clientOrderId'];
+  } else {
+      echo "Gagal membuat order LIMIT.\n";
+  }
+
+?>
+```
+
+### Membatalkan Order
+`cancelOrder(string $symbol, int $orderId = null, string $origClientOrderId = null)` - Membatalkan order yang belum terisi.
+- $symbol: Pasangan trading order.
+- Anda harus menyediakan salah satu:
+  - $orderId: ID order Binance.
+  - $origClientOrderId: ID order kustom yang Anda tentukan.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Contoh membatalkan order (LANJUTAN DARI CONTOH PLACE ORDER)
+  if (isset($placed_order_id) && $placed_order_id) { // Hanya jika order sebelumnya berhasil dibuat
+      echo "\n--- Membatalkan Order LIMIT yang Baru Dibuat ---\n";
+      $cancelResult = $binanceApi->cancelOrder($symbol_limit, $placed_order_id);
+      if ($cancelResult) {
+          echo "Order LIMIT ID " . $placed_order_id . " berhasil dibatalkan. Status: " . $cancelResult['status'] . "\n";
+      } else {
+          echo "Gagal membatalkan order.\n";
+      }
+  }
+?>
+```
+
