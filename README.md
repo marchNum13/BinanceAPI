@@ -197,9 +197,9 @@ if ($exchangeInfo) {
 
 ### Mengambil Data Klines/Candlestick
 `getKlines(string $symbol, string $interval, int $limit = 500, int $startTime = null, int $endTime = null)` - Mengambil data candlestick.
-- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
-- `$interval`: Interval candlestick (misal: '1m', '1h', '1d').
-- `$limit`: Jumlah candlestick yang diinginkan (default 500, max 1000).
+- `$symbol`: Pasangan trading (misal: `'BTCUSDT'`).
+- `$interval`: Interval candlestick (misal: `'1m'`, `'1h'`, `'1d'`).
+- `$limit`: Jumlah candlestick yang diinginkan (default `500`, max `1000`).
 - `$startTime`, `$endTime`: Filter berdasarkan rentang waktu (Unix timestamp milidetik).
 
 ```php
@@ -221,8 +221,8 @@ if ($exchangeInfo) {
 
 ### Mengambil Kedalaman Pasar (Order Book)
 `getDepth(string $symbol, int $limit = 100)` - Mengambil order book (buku pesanan) untuk pasangan trading tertentu.
-- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
-- `$limit`: Jumlah entri kedalaman yang ingin diambil (misal: 5, 10, 20, 50, 100, 500, 1000, 5000). Default 100.
+- `$symbol`: Pasangan trading (misal: `'BTCUSDT'`).
+- `$limit`: Jumlah entri kedalaman yang ingin diambil (misal: `5`, `10`, `20`, `50`, `100`, `500`, `1000`, `5000`). Default `100`.
 
 ```php
 <?php
@@ -248,13 +248,13 @@ if ($exchangeInfo) {
 
 ### Mengajukan Order Baru (Limit, Market, Stop Loss, Take Profit)
 `placeOrder(string $symbol, string $side, string $type, float $quantity, float $price = null, float $stopPrice = null, string $timeInForce = null, string $newClientOrderId = null)` - Mengajukan order baru.
-- `$symbol`: Pasangan trading (misal: 'BTCUSDT').
-- `$side`: Arah order ('BUY' atau 'SELL').
-- `$type`: Tipe order ('LIMIT', 'MARKET', 'STOP_LOSS', 'TAKE_PROFIT').
+- `$symbol`: Pasangan trading (misal: `'BTCUSDT'`).
+- `$side`: Arah order (`'BUY'` atau `'SELL'`).
+- `$type`: Tipe order (`'LIMIT'`, `'MARKET'`, `'STOP_LOSS'`, `'TAKE_PROFIT'`).
 - `$quantity`: Jumlah aset dasar.
 - `$price` (opsional): Harga untuk order LIMIT, atau harga limit untuk order STOP_LOSS/TAKE_PROFIT.
 - `$stopPrice` (opsional): Harga pemicu untuk order STOP_LOSS/TAKE_PROFIT.
-- `$timeInForce` (opsional): Untuk order LIMIT ('GTC', 'IOC', 'FOK').
+- `$timeInForce` (opsional): Untuk order LIMIT (`'GTC'`, `'IOC'`, `'FOK'`).
 - `$newClientOrderId` (opsional): ID order kustom Anda.
 
 ```php
@@ -361,7 +361,7 @@ if ($exchangeInfo) {
 - `$symbol`: Pasangan trading (misal: `'BNBUSDT'`).
 - `$orderId` (opsional): Order ID untuk memulai pengambilan.
 - `$startTime`, `$endTime` (opsional): Filter berdasarkan rentang waktu (Unix timestamp milidetik).
-- `$limit` (opsional): Jumlah order yang diinginkan (default 500, max 1000).
+- `$limit` (opsional): Jumlah order yang diinginkan (default `500`, max `1000`).
 
 ```php
 <?php
@@ -385,7 +385,7 @@ if ($exchangeInfo) {
 - `$symbol`: Pasangan trading (misal: `'BTCUSDT'`).
 - `$orderId` (opsional): Filter berdasarkan Order ID.
 - `$startTime`, `$endTime` (opsional): Filter berdasarkan rentang waktu trade (Unix timestamp milidetik).
-- `$limit` (opsional): Jumlah trade yang diinginkan (default 500, max 1000).
+- `$limit` (opsional): Jumlah trade yang diinginkan (default `500`, max `1000`).
 - `$fromId` (opsional): Trade ID untuk memulai pengambilan (mengambil trade dengan ID lebih besar dari ini).
 
 ```php
