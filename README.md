@@ -74,7 +74,8 @@ $secret_key = 'YOUR_BINANCE_SECRET_KEY';
 
 $binanceApi = new BinanceSpotAPI($api_key, $secret_key);
 ?>
-
+```
+```php
 <?php
 // ... inisialisasi class ...
 
@@ -86,3 +87,4 @@ if ($ping !== false) { // Ping akan mengembalikan array kosong [] jika sukses
     echo "Gagal koneksi ke Binance API.\n";
 }
 ?>
+```
