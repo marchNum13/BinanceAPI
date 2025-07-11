@@ -286,10 +286,10 @@ if ($exchangeInfo) {
 
 ### Membatalkan Order
 `cancelOrder(string $symbol, int $orderId = null, string $origClientOrderId = null)` - Membatalkan order yang belum terisi.
-- $symbol: Pasangan trading order.
+- `$symbol`: Pasangan trading order.
 - Anda harus menyediakan salah satu:
-  - $orderId: ID order Binance.
-  - $origClientOrderId: ID order kustom yang Anda tentukan.
+  - `$orderId`: ID order Binance.
+  - `$origClientOrderId`: ID order kustom yang Anda tentukan.
 
 ```php
 <?php
@@ -304,6 +304,170 @@ if ($exchangeInfo) {
       } else {
           echo "Gagal membatalkan order.\n";
       }
+  }
+?>
+```
+
+### Mengambil Status Order Tertentu
+`getOrderStatus(string $symbol, int $orderId = null, string $origClientOrderId = null)` - Mengambil status detail dari order.
+- `$symbol`: Pasangan trading order.
+- Anda harus menyediakan salah satu:
+  - `$orderId`: ID order Binance.
+  - `$origClientOrderId`: ID order kustom yang Anda tentukan.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil status order dengan Order ID Binance
+  $orderId = 123456789; // Ganti dengan Order ID Anda yang valid
+  $symbol = 'BNBUSDT';
+  $orderStatus = $binanceApi->getOrderStatus($symbol, $orderId);
+  if ($orderStatus) {
+      echo "Status Order ID " . $orderId . ": " . $orderStatus['status'] . ", Qty: " . $orderStatus['executedQty'] . "/" . $orderStatus['origQty'] . "\n";
+  } else {
+      echo "Gagal mengambil status order.\n";
+  }
+?>
+```
+
+### Mengambil Open Orders
+`getOpenOrders(string $symbol = null)` - Mengambil semua open order atau open order untuk symbol tertentu.
+- `$symbol` (opsional): Filter berdasarkan pasangan trading (misal: `'BNBUSDT'`). Jika null, akan mengembalikan semua open order.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil semua open orders
+  $openOrders = $binanceApi->getOpenOrders();
+  if ($openOrders !== false) {
+      if (empty($openOrders)) {
+          echo "Tidak ada open order saat ini.\n";
+      } else {
+          echo "Open Orders Anda:\n";
+          foreach ($openOrders as $order) {
+              echo "  Symbol: " . $order['symbol'] . ", ID: " . $order['orderId'] . ", Type: " . $order['type'] . ", Side: " . $order['side'] . ", Status: " . $order['status'] . "\n";
+          }
+      }
+  } else {
+      echo "Gagal mengambil open orders.\n";
+  }
+?>
+```
+
+### Mengambil Semua Riwayat Order
+`getAllOrders(string $symbol, int $orderId = null, int $startTime = null, int $endTime = null, int $limit = 500)` - Mengambil semua riwayat order (termasuk yang tidak aktif/dibatalkan) untuk symbol tertentu.
+- `$symbol`: Pasangan trading (misal: `'BNBUSDT'`).
+- `$orderId` (opsional): Order ID untuk memulai pengambilan.
+- `$startTime`, `$endTime` (opsional): Filter berdasarkan rentang waktu (Unix timestamp milidetik).
+- `$limit` (opsional): Jumlah order yang diinginkan (default 500, max 1000).
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil semua riwayat order untuk BTCUSDT
+  $allOrders = $binanceApi->getAllOrders('BTCUSDT', null, null, null, 5); // Ambil 5 order terbaru
+  if ($allOrders) {
+      echo "Riwayat Semua Order BTCUSDT (5 Terbaru):\n";
+      foreach ($allOrders as $order) {
+          echo "  Order ID: " . $order['orderId'] . ", Type: " . $order['type'] . ", Side: " . $order['side'] . ", Status: " . $order['status'] . ", Qty: " . $order['origQty'] . "\n";
+      }
+  } else {
+      echo "Gagal mengambil semua riwayat order.\n";
+  }
+?>
+```
+
+### Mengambil Riwayat Perdagangan Pribadi
+`getMyTrades(string $symbol, int $orderId = null, int $startTime = null, int $endTime = null, int $limit = 500, int $fromId = null)` - Mengambil riwayat perdagangan (trades) Anda sendiri untuk pasangan simbol tertentu.
+- `$symbol`: Pasangan trading (misal: `'BTCUSDT'`).
+- `$orderId` (opsional): Filter berdasarkan Order ID.
+- `$startTime`, `$endTime` (opsional): Filter berdasarkan rentang waktu trade (Unix timestamp milidetik).
+- `$limit` (opsional): Jumlah trade yang diinginkan (default 500, max 1000).
+- `$fromId` (opsional): Trade ID untuk memulai pengambilan (mengambil trade dengan ID lebih besar dari ini).
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil 10 riwayat trade terbaru untuk BTCUSDT
+  $myTrades = $binanceApi->getMyTrades('BTCUSDT', null, null, null, 10);
+  if ($myTrades) {
+      echo "Riwayat Perdagangan BTCUSDT (10 Terbaru):\n";
+      foreach ($myTrades as $trade) {
+          echo "  Trade ID: " . $trade['id'] . ", Price: " . $trade['price'] . ", Qty: " . $trade['qty'] . ", Commission: " . $trade['commission'] . " " . $trade['commissionAsset'] . ", Buyer: " . ($trade['isBuyer'] ? 'Yes' : 'No') . "\n";
+      }
+  } else {
+      echo "Gagal mengambil riwayat perdagangan.\n";
+  }
+?>
+```
+
+### Mengambil Informasi Akun dan Saldo Spot
+`getAccountInfo()` - Mengambil detail akun termasuk status trading dan semua saldo aset.
+`getSpotBalance()` - Metode pembantu untuk hanya mengambil array saldo dari `getAccountInfo()`.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Mengambil info akun
+  $accountInfo = $binanceApi->getAccountInfo();
+  if ($accountInfo) {
+      echo "Informasi Akun:\n";
+      echo "  Dapat Berdagang: " . ($accountInfo['canTrade'] ? 'Ya' : 'Tidak') . "\n";
+      echo "  Saldo Aset:\n";
+      foreach ($accountInfo['balances'] as $asset) {
+          if (floatval($asset['free']) > 0 || floatval($asset['locked']) > 0) {
+              echo "    Asset: " . $asset['asset'] . ", Free: " . $asset['free'] . ", Locked: " . $asset['locked'] . "\n";
+          }
+      }
+  } else {
+      echo "Gagal mengambil informasi akun.\n";
+  }
+?>
+```
+
+### Mengelola User Data Stream (WebSocket)
+Ini adalah endpoint REST untuk mengelola `listenKey` yang diperlukan untuk terhubung ke WebSocket User Data Stream, yang memberikan update real-time tentang akun Anda.
+- `startUserDataStream()`: Membuat listenKey baru.
+- `keepAliveUserDataStream(string $listenKey)`: Memperpanjang masa berlaku listenKey (harus dipanggil setiap 30 menit).
+- `closeUserDataStream(string $listenKey)`: Menutup `listenKey`.
+
+```php
+<?php
+  // ... inisialisasi class ...
+
+  // Contoh penggunaan User Data Stream (hanya bagian REST API)
+  echo "\n--- Mengelola User Data Stream ---\n";
+  $listenKey = $binanceApi->startUserDataStream();
+  if ($listenKey) {
+      echo "ListenKey baru dibuat: " . $listenKey . "\n";
+      echo "ListenKey ini akan berakhir dalam 30 menit. Anda harus memanggil keepAliveUserDataStream() secara berkala.\n";
+
+      // Contoh: Simulasikan memperpanjang setelah 1 menit (dalam produksi ini harus di cron job atau loop terpisah)
+      sleep(60); // Tunggu 60 detik
+      echo "Memperpanjang ListenKey setelah 1 menit...\n";
+      $keepAliveResult = $binanceApi->keepAliveUserDataStream($listenKey);
+      if ($keepAliveResult !== false) {
+          echo "ListenKey berhasil diperpanjang.\n";
+      } else {
+          echo "Gagal memperpanjang ListenKey.\n";
+      }
+
+      // Contoh: Menutup ListenKey (lakukan ini saat aplikasi Anda berhenti atau tidak lagi membutuhkan stream)
+      echo "Menutup ListenKey...\n";
+      $closeResult = $binanceApi->closeUserDataStream($listenKey);
+      if ($closeResult !== false) {
+          echo "ListenKey berhasil ditutup.\n";
+      } else {
+          echo "Gagal menutup ListenKey.\n";
+      }
+
+  } else {
+      echo "Gagal membuat ListenKey untuk User Data Stream.\n";
   }
 ?>
 ```
